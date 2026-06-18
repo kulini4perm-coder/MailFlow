@@ -28,3 +28,14 @@ class MailingDeleteView(DeleteView):
     template_name = 'mailings/mailing_confirm_delete.html'
     success_url = reverse_lazy('mailings:list')
 
+from django.shortcuts import get_object_or_404, redirect
+from django.views import View
+from .services import send_mailing_now
+
+class MailingSendView(View):
+    """Контроллер для ручного запуска рассылки из браузера"""
+    def post(self, request, *args, **kwargs):
+        mailing = get_object_or_404(Mailing, pk=self.kwargs.get('pk'))
+        send_mailing_now(mailing)
+        return redirect('mailings:detail', pk=mailing.pk)
+

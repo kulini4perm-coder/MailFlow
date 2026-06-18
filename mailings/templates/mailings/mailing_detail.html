@@ -38,11 +38,18 @@
         
         <div class="d-flex justify-content-between">
             <a href="{% url 'mailings:list' %}" class="btn btn-secondary">Назад к списку</a>
-            <div>
+            <div class="d-flex gap-2">
+                {# Кнопка ручного запуска #}
+                <form method="post" action="{% url 'mailings:send' mailing.pk %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-success">Запустить сейчас</button>
+                </form>
+
                 <a href="{% url 'mailings:update' mailing.pk %}" class="btn btn-warning">Изменить</a>
-                <a href="{% url 'mailings:delete' mailing.pk %}" class="btn btn-danger">Удалить</a>
+                 <a href="{% url 'mailings:delete' mailing.pk %}" class="btn btn-danger">Удалить</a>
             </div>
         </div>
+
     </div>
 </div>
 {% endblock %}
