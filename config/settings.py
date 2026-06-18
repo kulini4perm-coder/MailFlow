@@ -44,6 +44,7 @@ INSTALLED_APPS = [
 
     'clients',
     'messages_app',
+    'mailings',
 ]
 
 MIDDLEWARE = [
