@@ -23,8 +23,16 @@
                 <!-- Блок авторизации пользователя -->
                 <div class="text-end">
                     {% if user.is_authenticated %}
-                        <a href="{% url 'users:profile' %}" class="me-3 text-light small text-decoration-none">👤 {{ user.email }}</a>
-                        <form method="post" action="{% url 'users:logout' %}" class="d-inline">
+                        <!-- Если у пользователя загружен аватар, показываем его, иначе — стандартный смайлик -->
+                        {% if user.avatar %}
+                            <img src="{{ user.avatar.url }}" alt="Avatar" class="rounded-circle" style="width: 32px; height: 32px; object-fit: cover;">
+                        {% else %}
+                            <span class="fs-5">👤</span>
+                        {% endif %}
+
+                        <a href="{% url 'users:profile' %}" class="text-light small text-decoration-none fw-semibold">{{ user.email }}</a>
+
+                        <form method="post" action="{% url 'users:logout' %}" class="d-inline mb-0">
                             {% csrf_token %}
                             <button type="submit" class="btn btn-outline-light btn-sm">Выйти</button>
                         </form>
