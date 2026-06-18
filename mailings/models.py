@@ -27,3 +27,26 @@ class Mailing(models.Model):
     def __str__(self):
         return f"Рассылка №{self.id} — {self.message.subject[:20]}... ({self.get_status_display()})"
 
+
+class MailingLog(models.Model):
+    """Модель попытки рассылки"""
+    STATUS_CHOICES = [
+        ('success', 'Успешно'),
+        ('failure', 'Не успешно'),
+    ]
+
+    attempt_time = models.DateTimeField(auto_now_add=True, verbose_name="Дата и время попытки")
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, verbose_name="Статус")
+    server_response = models.TextField(blank=True, null=True, verbose_name="Ответ почтового сервера")
+
+    # Внешний ключ на модель Рассылки
+    mailing = models.ForeignKey(Mailing, on_delete=models.CASCADE, verbose_name="Рассылка", related_name="logs")
+
+    class Meta:
+        verbose_name = "Попытка рассылки"
+        verbose_name_plural = "Попытки рассылок"
+        ordering = ['-attempt_time']  # Последние логи всегда вверху
+
+    def __str__(self):
+        return f"Лог №{self.id} для Рассылки №{self.mailing_id} ({self.get_status_display()})"
+
