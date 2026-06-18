@@ -39,3 +39,21 @@ class MailingSendView(View):
         send_mailing_now(mailing)
         return redirect('mailings:detail', pk=mailing.pk)
 
+
+from django.views.generic import TemplateView
+from mailings.models import Mailing
+from clients.models import Client
+
+
+class HomeView(TemplateView):
+    template_name = 'mailings/home.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        # Сбор аналитики для главной страницы
+        context['total_mailings'] = Mailing.objects.count()
+        context['active_mailings'] = Mailing.objects.filter(status='started').count()
+        context['unique_clients'] = Client.objects.filter(mailings__isnull=False).distinct().count()
+
+        return context

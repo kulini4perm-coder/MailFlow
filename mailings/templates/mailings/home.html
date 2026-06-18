@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+
+{% block title %}Главная - MailFlow{% endblock %}
+
+{% block content %}
+<div class="p-5 mb-4 bg-light rounded-3 border shadow-sm">
+    <div class="container-fluid py-3">
+        <h1 class="display-5 fw-bold text-dark">Добро пожаловать в MailFlow!</h1>
+        <p class="col-md-8 fs-5 text-muted">Современный и удобный сервис по управлению рассылками сообщений для вашей клиентской базы.</p>
+        <a href="{% url 'mailings:create' %}" class="btn btn-primary btn-lg mt-2">Запустить новую рассылку</a>
+    </div>
+</div>
+
+<h3 class="mb-4 text-secondary fw-semibold">Текущая статистика системы</h3>
+
+<div class="row row-cols-1 row-cols-md-3 g-4 mb-5">
+    <!-- Всего рассылок -->
+    <div class="col">
+        <div class="card h-100 shadow-sm border-primary text-center">
+            <div class="card-body py-4">
+                <h6 class="card-subtitle mb-2 text-muted text-uppercase small fw-bold">Всего рассылок</h6>
+                <p class="card-text display-4 fw-bold text-primary mb-0">{{ total_mailings }}</p>
+            </div>
+            <div class="card-footer bg-transparent border-top-0">
+                <a href="{% url 'mailings:list' %}" class="small text-decoration-none">Перейти к списку &rarr;</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Активные рассылки -->
+    <div class="col">
+        <div class="card h-100 shadow-sm border-success text-center">
+            <div class="card-body py-4">
+                <h6 class="card-subtitle mb-2 text-muted text-uppercase small fw-bold">Активные рассылки</h6>
+                <p class="card-text display-4 fw-bold text-success mb-0">{{ active_mailings }}</p>
+            </div>
+            <div class="card-footer bg-transparent border-top-0">
+                <span class="small text-muted">Статус «Запущена»</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Уникальные клиенты -->
+    <div class="col">
+        <div class="card h-100 shadow-sm border-warning text-center">
+            <div class="card-body py-4">
+                <h6 class="card-subtitle mb-2 text-muted text-uppercase small fw-bold">Уникальные получатели</h6>
+                <p class="card-text display-4 fw-bold text-warning mb-0">{{ unique_clients }}</p>
+            </div>
+            <div class="card-footer bg-transparent border-top-0">
+                <a href="{% url 'clients:list' %}" class="small text-decoration-none">Управление базой &rarr;</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
