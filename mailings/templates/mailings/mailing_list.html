@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+
+{% block title %}Список рассылок - MailFlow{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Управление рассылками</h2>
+    <a href="{% url 'mailings:create' %}" class="btn btn-primary">Создать рассылку</a>
+</div>
+
+<div class="card shadow-sm">
+    <div class="table-responsive">
+        <table class="table table-striped table-hover align-middle mb-0">
+            <thead class="table-dark">
+            <tr>
+                <th>ID</th>
+                <th>Сообщение (Тема)</th>
+                <th>Начало</th>
+                <th>Окончание</th>
+                <th>Статус</th>
+                <th class="text-end">Действия</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for mailing in mailings %}
+            <tr>
+                <td>{{ mailing.id }}</td>
+                <td><strong>{{ mailing.message.subject }}</strong></td>
+                <td>{{ mailing.start_time|date:"d.m.Y H:i" }}</td>
+                <td>{{ mailing.end_time|date:"d.m.Y H:i" }}</td>
+                <td>
+                    {% if mailing.status == 'created' %}
+                    <span class="badge bg-secondary">Создана</span>
+                    {% elif mailing.status == 'started' %}
+                    <span class="badge bg-success">Запущена</span>
+                    {% else %}
+                    <span class="badge bg-danger">Завершена</span>
+                    {% endif %}
+                </td>
+                <td class="text-end">
+                    <!-- Кнопка просмотра доступна всем ролям -->
+                    <a href="{% url 'mailings:detail' mailing.pk %}" class="btn btn-sm btn-info text-white">Смотреть</a>
+
+                    {# Редактировать и удалять может только создатель (владелец) или суперпользователь #}
+                    {% if user.is_superuser or mailing.owner == user %}
+                    <a href="{% url 'mailings:update' mailing.pk %}" class="btn btn-sm btn-warning">Редактировать</a>
+                    <a href="{% url 'mailings:delete' mailing.pk %}" class="btn btn-sm btn-danger">Удалить</a>
+                    {% endif %}
+
+                    {# Менеджер или админ видят кнопку отключения, если рассылка еще активна #}
+                    {% if user.is_superuser or user.groups.all.0.name == "Менеджеры" %}
+                    {% if mailing.status != 'completed' %}
+                    <form method="post" action="{% url 'mailings:toggle_status' mailing.pk %}" class="d-inline mb-0">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-sm btn-outline-danger">Отключить</button>
+                    </form>
+                    {% endif %}
+                    {% endif %}
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="6" class="text-center py-4 text-muted">Список рассылок пока пуст.</td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

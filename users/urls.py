@@ -1,0 +1,16 @@
+from django.urls import path
+from django.contrib.auth.views import LoginView, LogoutView
+from .views import RegisterView, ProfileUpdateView, password_reset_simple, UserListView, toggle_user_active
+
+app_name = 'users'
+
+urlpatterns = [
+    path('login/', LoginView.as_view(template_name='users/login.html'), name='login'),
+    path('logout/', LogoutView.as_view(next_page='home'), name='logout'),
+    path('register/', RegisterView.as_view(), name='register'),
+    path('profile/', ProfileUpdateView.as_view(), name='profile'),
+    path('password-reset/', password_reset_simple, name='password_reset'),
+    path('users-list/', UserListView.as_view(), name='user_list'),
+    path('users-list/<int:pk>/toggle/', toggle_user_active, name='toggle_user'),
+
+]

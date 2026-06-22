@@ -1,0 +1,96 @@
+{% extends 'base.html' %}
+
+{% block title %}Рассылка №{{ mailing.id }} - MailFlow{% endblock %}
+
+{% block content %}
+<div class="card shadow-sm mx-auto" style="max-width: 800px;">
+    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+        <h4 class="mb-0">Детали рассылки №{{ mailing.id }}</h4>
+        <span class="badge bg-light text-dark fs-6">{{ mailing.get_status_display }}</span>
+    </div>
+    <div class="card-body">
+        <h5 class="text-muted small text-uppercase">Выбранное сообщение:</h5>
+        <p class="fs-5 fw-bold mb-3">{{ mailing.message.subject }}</p>
+
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <span class="text-muted small text-uppercase">Старт рассылки:</span>
+                <p class="fw-semibold">{{ mailing.start_time|date:"d.m.Y H:i" }}</p>
+            </div>
+            <div class="col-md-6">
+                <span class="text-muted small text-uppercase">Окончание рассылки:</span>
+                <p class="fw-semibold">{{ mailing.end_time|date:"d.m.Y H:i" }}</p>
+            </div>
+        </div>
+
+        <h5 class="text-muted small text-uppercase">Получатели ({{ mailing.recipients.count }}):</h5>
+        <div class="p-3 bg-light rounded border mb-4" style="max-height: 200px; overflow-y: auto;">
+            <ul class="list-group list-group-flush">
+                {% for client in mailing.recipients.all %}
+                <li class="list-group-item bg-transparent px-0 py-1">
+                    {{ client.full_name }} <span class="text-muted">({{ client.email }})</span>
+                </li>
+                {% empty %}
+                <li class="list-group-item bg-transparent text-muted px-0 py-1">Получатели не выбраны.</li>
+                {% endfor %}
+            </ul>
+        </div>
+
+
+        <div class="d-flex justify-content-between">
+            <a href="{% url 'mailings:list' %}" class="btn btn-secondary">Назад к списку</a>
+            <div class="d-flex gap-2">
+                {# Кнопка ручного запуска #}
+                <form method="post" action="{% url 'mailings:send' mailing.pk %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-success">Запустить сейчас</button>
+                </form>
+
+                <a href="{% url 'mailings:update' mailing.pk %}" class="btn btn-warning">Изменить</a>
+                <a href="{% url 'mailings:delete' mailing.pk %}" class="btn btn-danger">Удалить</a>
+            </div>
+        </div>
+
+    </div>
+</div>
+<div class="card shadow-sm mt-4 border-secondary">
+    <div class="card-header bg-dark text-white">
+        <h5 class="mb-0">История и статистика попыток рассылки</h5>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                <tr>
+                    <th>Время попытки</th>
+                    <th>Статус</th>
+                    <th>Ответ сервера / Описание</th>
+                </tr>
+                </thead>
+                <tbody>
+                {# Берем логи через related_name='logs' из нашей модели #}
+                {% for log in mailing.logs.all %}
+                <tr>
+                    <td class="text-nowrap">{{ log.attempt_time|date:"d.m.Y H:i:s" }}</td>
+                    <td>
+                        {% if log.status == 'success' %}
+                        <span class="badge bg-success">Успешно</span>
+                        {% else %}
+                        <span class="badge bg-danger">Не успешно</span>
+                        {% endif %}
+                    </td>
+                    <td><small class="text-muted">{{ log.server_response }}</small></td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="3" class="text-center py-4 text-muted">По этой рассылке еще не было попыток отправки.
+                    </td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

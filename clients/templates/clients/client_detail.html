@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ client.full_name }} - MailFlow{% endblock %}
+
+{% block content %}
+<div class="card shadow-sm max-width-md mx-auto" style="max-width: 600px;">
+    <div class="card-header bg-primary text-white">
+        <h4 class="mb-0">Карточка клиента</h4>
+    </div>
+    <div class="card-body">
+        <h3 class="card-title">{{ client.full_name }}</h3>
+        <p class="card-text"><strong>Email:</strong> {{ client.email }}</p>
+        <p class="card-text"><strong>Комментарий:</strong></p>
+        <div class="p-3 bg-light rounded border mb-4">
+            {{ client.comment|default:"Комментарий отсутствует" }}
+        </div>
+        <div class="d-flex justify-content-between">
+            <a href="{% url 'clients:list' %}" class="btn btn-secondary">Назад к списку</a>
+            <div>
+                <a href="{% url 'clients:update' client.pk %}" class="btn btn-warning">Изменить</a>
+                <a href="{% url 'clients:delete' client.pk %}" class="btn btn-danger">Удалить</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

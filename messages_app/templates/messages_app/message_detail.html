@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ message.subject }} - MailFlow{% endblock %}
+
+{% block content %}
+<div class="card shadow-sm mx-auto" style="max-width: 700px;">
+    <div class="card-header bg-primary text-white">
+        <h4 class="mb-0">Просмотр сообщения</h4>
+    </div>
+    <div class="card-body">
+        <h3 class="card-title text-muted small text-uppercase">Тема письма:</h3>
+        <p class="fs-4 fw-bold mb-4">{{ message.subject }}</p>
+        
+        <h3 class="card-title text-muted small text-uppercase">Тело письма:</h3>
+        <div class="p-3 bg-light rounded border mb-4" style="white-space: pre-wrap;">{{ message.body }}</div>
+        
+        <div class="d-flex justify-content-between">
+            <a href="{% url 'messages_app:list' %}" class="btn btn-secondary">Назад к списку</a>
+            <div>
+                <a href="{% url 'messages_app:update' message.pk %}" class="btn btn-warning">Изменить</a>
+                <a href="{% url 'messages_app:delete' message.pk %}" class="btn btn-danger">Удалить</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

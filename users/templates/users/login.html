@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+{% block title %}Вход - MailFlow{% endblock %}
+{% block content %}
+<div class="card shadow-sm mx-auto" style="max-width: 400px;">
+    <div class="card-header bg-dark text-white"><h4 class="mb-0">Вход в систему</h4></div>
+    <div class="card-body">
+        <form method="post">
+            {% csrf_token %}
+            <div class="mb-3">
+                <label class="form-label">Email</label>
+                <input type="email" name="username" class="form-control" required>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Пароль</label>
+                <input type="password" name="password" class="form-control" required>
+            </div>
+            <button type="submit" class="btn btn-primary w-100 mb-3">Войти</button>
+            <div class="text-center">
+                <a href="{% url 'users:password_reset' %}" class="small text-decoration-none">Забыли пароль?</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
