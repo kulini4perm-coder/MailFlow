@@ -6,24 +6,39 @@ from .models import Mailing, MailingLog
 
 
 def send_mailing_now(mailing: Mailing):
-    """Отправляет сообщения всем клиентам рассылки и логирует результат"""
-    recipient_list = [client.email for client in mailing.clients.all()]
+    """Отправляет сообщения с жесткой валидацией разрешенного интервала времени"""
+    now = timezone.now()
 
-    if not recipient_list:
-        # Если клиентов нет, фиксируем это в логах и выходим
+    # Проверка временного интервала перед отправкой
+    if not (mailing.start_time <= now <= mailing.end_time):
+        error_msg = f"Ошибка запуска: текущее время {now.strftime('%d.%m.%Y %H:%M')} не входит в интервал рассылки."
+
+        # Фиксируем попытку как неуспешную из-за нарушения регламента времени
         MailingLog.objects.create(
             status='failure',
-            server_response='Ошибка: у рассылки отсутствуют получатели.',
+            server_response=error_msg,
             mailing=mailing
         )
-        return 0
+        return False, error_msg
 
-    # Переводим рассылку в статус "Запущена"
+    # Определение получателей
+    recipient_list = [client.email for client in mailing.recipients.all()]
+
+    if not recipient_list:
+        error_msg = "Ошибка запуска: у рассылки отсутствуют получатели."
+        MailingLog.objects.create(
+            status='failure',
+            server_response=error_msg,
+            mailing=mailing
+        )
+        return False, error_msg
+
+    # Переводим в статус "Запущена"
     mailing.status = 'started'
     mailing.save()
 
     try:
-        # Пробуем отправить письмо
+        # Отправка писем с помощью send_mail()
         send_mail(
             subject=mailing.message.subject,
             message=mailing.message.body,
@@ -32,28 +47,25 @@ def send_mailing_now(mailing: Mailing):
             fail_silently=False,
         )
 
-        # Если всё хорошо — пишем успешный лог
+        # Создается запись со статусом 'Успешно'
         MailingLog.objects.create(
             status='success',
             server_response='Письма успешно отправлены всем получателям.',
             mailing=mailing
         )
-
-        # Завершаем рассылку
         mailing.status = 'completed'
+        mailing.save()
+        return True, "Рассылка успешно выполнена!"
 
     except (smtplib.SMTPException, Exception) as error:
-        # Если сервер упал или почта не существует — ловим ошибку
+        # Создается запись со статусом 'Не успешно' и текстом ошибки
+        server_error = f"Ошибка почтового сервера: {str(error)}"
         MailingLog.objects.create(
             status='failure',
-            server_response=f'Ошибка отправки: {str(error)}',
+            server_response=server_error,
             mailing=mailing
         )
-
-        # Оставляем статус "Создана", чтобы её можно было перезапустить позже
+        # Возвращаем статус в исходный, чтобы можно было исправить настройки
         mailing.status = 'created'
-
-    finally:
-        # В любом случае сохраняем итоговый статус рассылки
         mailing.save()
-
+        return False, server_error

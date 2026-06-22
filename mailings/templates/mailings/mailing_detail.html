@@ -11,31 +11,32 @@
     <div class="card-body">
         <h5 class="text-muted small text-uppercase">Выбранное сообщение:</h5>
         <p class="fs-5 fw-bold mb-3">{{ mailing.message.subject }}</p>
-        
+
         <div class="row mb-4">
             <div class="col-md-6">
                 <span class="text-muted small text-uppercase">Старт рассылки:</span>
-                <p class="fw-semibold">{{ mailing.start_date|date:"d.m.Y H:i" }}</p>
+                <p class="fw-semibold">{{ mailing.start_time|date:"d.m.Y H:i" }}</p>
             </div>
             <div class="col-md-6">
                 <span class="text-muted small text-uppercase">Окончание рассылки:</span>
-                <p class="fw-semibold">{{ mailing.end_date|date:"d.m.Y H:i" }}</p>
+                <p class="fw-semibold">{{ mailing.end_time|date:"d.m.Y H:i" }}</p>
             </div>
         </div>
 
-        <h5 class="text-muted small text-uppercase">Получатели ({{ mailing.clients.count }}):</h5>
+        <h5 class="text-muted small text-uppercase">Получатели ({{ mailing.recipients.count }}):</h5>
         <div class="p-3 bg-light rounded border mb-4" style="max-height: 200px; overflow-y: auto;">
             <ul class="list-group list-group-flush">
-                {% for client in mailing.clients.all %}
-                    <li class="list-group-item bg-transparent px-0 py-1">
-                        {{ client.full_name }} <span class="text-muted">({{ client.email }})</span>
-                    </li>
+                {% for client in mailing.recipients.all %}
+                <li class="list-group-item bg-transparent px-0 py-1">
+                    {{ client.full_name }} <span class="text-muted">({{ client.email }})</span>
+                </li>
                 {% empty %}
-                    <li class="list-group-item bg-transparent text-muted px-0 py-1">Получатели не выбраны.</li>
+                <li class="list-group-item bg-transparent text-muted px-0 py-1">Получатели не выбраны.</li>
                 {% endfor %}
             </ul>
         </div>
-        
+
+
         <div class="d-flex justify-content-between">
             <a href="{% url 'mailings:list' %}" class="btn btn-secondary">Назад к списку</a>
             <div class="d-flex gap-2">
@@ -46,7 +47,7 @@
                 </form>
 
                 <a href="{% url 'mailings:update' mailing.pk %}" class="btn btn-warning">Изменить</a>
-                 <a href="{% url 'mailings:delete' mailing.pk %}" class="btn btn-danger">Удалить</a>
+                <a href="{% url 'mailings:delete' mailing.pk %}" class="btn btn-danger">Удалить</a>
             </div>
         </div>
 
@@ -60,31 +61,32 @@
         <div class="table-responsive">
             <table class="table table-hover align-middle mb-0">
                 <thead class="table-light">
-                    <tr>
-                        <th>Время попытки</th>
-                        <th>Статус</th>
-                        <th>Ответ сервера / Описание</th>
-                    </tr>
+                <tr>
+                    <th>Время попытки</th>
+                    <th>Статус</th>
+                    <th>Ответ сервера / Описание</th>
+                </tr>
                 </thead>
                 <tbody>
-                    {# Берем логи через related_name='logs' из нашей модели #}
-                    {% for log in mailing.logs.all %}
-                    <tr>
-                        <td class="text-nowrap">{{ log.attempt_time|date:"d.m.Y H:i:s" }}</td>
-                        <td>
-                            {% if log.status == 'success' %}
-                                <span class="badge bg-success">Успешно</span>
-                            {% else %}
-                                <span class="badge bg-danger">Не успешно</span>
-                            {% endif %}
-                        </td>
-                        <td><small class="text-muted">{{ log.server_response }}</small></td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="3" class="text-center py-4 text-muted">По этой рассылке еще не было попыток отправки.</td>
-                    </tr>
-                    {% endfor %}
+                {# Берем логи через related_name='logs' из нашей модели #}
+                {% for log in mailing.logs.all %}
+                <tr>
+                    <td class="text-nowrap">{{ log.attempt_time|date:"d.m.Y H:i:s" }}</td>
+                    <td>
+                        {% if log.status == 'success' %}
+                        <span class="badge bg-success">Успешно</span>
+                        {% else %}
+                        <span class="badge bg-danger">Не успешно</span>
+                        {% endif %}
+                    </td>
+                    <td><small class="text-muted">{{ log.server_response }}</small></td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="3" class="text-center py-4 text-muted">По этой рассылке еще не было попыток отправки.
+                    </td>
+                </tr>
+                {% endfor %}
                 </tbody>
             </table>
         </div>

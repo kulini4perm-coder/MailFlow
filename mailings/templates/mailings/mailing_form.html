@@ -38,9 +38,7 @@
 <script>
     document.querySelectorAll('input, textarea, select').forEach(function(el) {
         el.classList.add('form-control');
-        
-        // Превращаем поля ввода дат в удобный интерактивный календарь
-        if (el.name === 'start_date' || el.name === 'end_date') {
+        if (el.name === 'start_time' || el.name === 'end_time') {
             el.type = 'datetime-local';
         }
     });
