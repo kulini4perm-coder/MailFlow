@@ -1,15 +1,32 @@
+from django.core.exceptions import PermissionDenied
 from django.urls import reverse_lazy
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 from .models import Mailing, MailingLog
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.shortcuts import get_object_or_404, redirect
+from django.views import View
+from .services import send_mailing_now
+from django.views.generic import TemplateView
+from mailings.models import Mailing
+from clients.models import Client
 
-class MailingListView(ListView):
+
+class MailingListView(LoginRequiredMixin, ListView):
     model = Mailing
     template_name = 'mailings/mailing_list.html'
     context_object_name = 'mailings'
 
+    def get_queryset(self):
+        user = self.request.user
+        if user.is_superuser or user.groups.filter(name='Менеджеры').exists():
+            return Mailing.objects.all()
+        return Mailing.objects.filter(owner=user)
+
+
 class MailingDetailView(DetailView):
     model = Mailing
     template_name = 'mailings/mailing_detail.html'
+
 
 class MailingCreateView(CreateView):
     model = Mailing
@@ -22,20 +39,26 @@ class MailingCreateView(CreateView):
         form.instance.owner = self.request.user
         return super().form_valid(form)
 
-class MailingUpdateView(UpdateView):
+
+class MailingUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     model = Mailing
     fields = ['message', 'clients', 'start_date', 'end_date', 'status']
     template_name = 'mailings/mailing_form.html'
     success_url = reverse_lazy('mailings:list')
 
-class MailingDeleteView(DeleteView):
+    def test_func(self):
+        # Менеджер не может редактировать чужие рассылки, только владелец или админ
+        return self.get_object().owner == self.request.user or self.request.user.is_superuser
+
+
+class MailingDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
     model = Mailing
     template_name = 'mailings/mailing_confirm_delete.html'
     success_url = reverse_lazy('mailings:list')
 
-from django.shortcuts import get_object_or_404, redirect
-from django.views import View
-from .services import send_mailing_now
+    def test_func(self):
+        return self.get_object().owner == self.request.user or self.request.user.is_superuser
+
 
 class MailingSendView(View):
     """Контроллер для ручного запуска рассылки из браузера"""
@@ -43,11 +66,6 @@ class MailingSendView(View):
         mailing = get_object_or_404(Mailing, pk=self.kwargs.get('pk'))
         send_mailing_now(mailing)
         return redirect('mailings:detail', pk=mailing.pk)
-
-
-from django.views.generic import TemplateView
-from mailings.models import Mailing
-from clients.models import Client
 
 
 class HomeView(TemplateView):
@@ -79,3 +97,13 @@ class HomeView(TemplateView):
             context['failure_logs'] = 0
 
         return context
+
+class MailingToggleStatusView(LoginRequiredMixin, View):
+    """Позволяет менеджеру принудительно завершить/отключить рассылку"""
+    def post(self, request, pk):
+        if not (request.user.is_superuser or request.user.groups.filter(name='Менеджеры').exists()):
+            raise PermissionDenied
+        mailing = get_object_or_404(Mailing, pk=pk)
+        mailing.status = 'completed'
+        mailing.save()
+        return redirect('mailings:list')

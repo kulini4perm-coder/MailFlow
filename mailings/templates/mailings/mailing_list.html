@@ -37,10 +37,25 @@
                             <span class="badge bg-danger">Завершена</span>
                         {% endif %}
                     </td>
-                    <td class="text-end">
+                        <td class="text-end">
+                        <!-- Кнопка просмотра доступна всем ролям -->
                         <a href="{% url 'mailings:detail' mailing.pk %}" class="btn btn-sm btn-info text-white">Смотреть</a>
-                        <a href="{% url 'mailings:update' mailing.pk %}" class="btn btn-sm btn-warning">Редактировать</a>
-                        <a href="{% url 'mailings:delete' mailing.pk %}" class="btn btn-sm btn-danger">Удалить</a>
+
+                        {# Редактировать и удалять может только создатель (владелец) или суперпользователь #}
+                        {% if user.is_superuser or mailing.owner == user %}
+                            <a href="{% url 'mailings:update' mailing.pk %}" class="btn btn-sm btn-warning">Редактировать</a>
+                            <a href="{% url 'mailings:delete' mailing.pk %}" class="btn btn-sm btn-danger">Удалить</a>
+                        {% endif %}
+
+                        {# Менеджер или админ видят кнопку отключения, если рассылка еще активна #}
+                        {% if user.is_superuser or user.groups.all.0.name == "Менеджеры" %}
+                            {% if mailing.status != 'completed' %}
+                                <form method="post" action="{% url 'mailings:toggle_status' mailing.pk %}" class="d-inline mb-0">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">Отключить</button>
+                                </form>
+                            {% endif %}
+                        {% endif %}
                     </td>
                 </tr>
                 {% empty %}

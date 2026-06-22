@@ -17,6 +17,9 @@
                         <li><a href="{% url 'clients:list' %}" class="nav-link px-2 text-white fw-semibold">Клиенты</a></li>
                         <li><a href="{% url 'mailings:list' %}" class="nav-link px-2 text-white fw-semibold">Рассылки</a></li>
                         <li><a href="{% url 'messages_app:list' %}" class="nav-link px-2 text-white fw-semibold">Сообщения</a></li>
+                        {% if user.is_superuser or user.groups.name == "Менеджеры" %}
+                            <li><a href="{% url 'users:user_list' %}" class="nav-link px-2 text-warning fw-semibold">Пользователи сервиса</a></li>
+                        {% endif %}
                     </ul>
                 </div>
 

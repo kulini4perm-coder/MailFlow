@@ -1,10 +1,15 @@
+from django.core.exceptions import PermissionDenied
 from django.urls import reverse_lazy
+from django.views.generic import ListView
 from django.views.generic.edit import CreateView, UpdateView
 from django.core.mail import send_mail
 from django.conf import settings
 from django.contrib.auth.mixins import LoginRequiredMixin
 from .models import User
 from .forms import UserCreateForm, UserProfileForm
+import secrets
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib import messages
 
 
 class RegisterView(CreateView):
@@ -40,9 +45,27 @@ class ProfileUpdateView(LoginRequiredMixin, UpdateView):
         return self.request.user
 
 
-import secrets
-from django.shortcuts import render, redirect
-from django.contrib import messages
+class UserListView(LoginRequiredMixin, ListView):
+    model = User
+    template_name = 'users/user_list.html'
+    context_object_name = 'users_list'
+
+    def dispatch(self, request, *args, **kwargs):
+        if not (request.user.is_superuser or request.user.groups.filter(name='Менеджеры').exists()):
+            raise PermissionDenied
+        return super().dispatch(request, *args, **kwargs)
+
+def toggle_user_active(request, pk):
+    if not (request.user.is_superuser or request.user.groups.filter(name='Менеджеры').exists()):
+        raise PermissionDenied
+    user_to_edit = get_object_or_404(User, pk=pk)
+    if not user_to_edit.is_superuser:  # Админов блокировать нельзя
+        user_to_edit.is_active = not user_to_edit.is_active
+        user_to_edit.save()
+    return redirect('users:user_list')
+
+
+
 
 
 def password_reset_simple(request):
