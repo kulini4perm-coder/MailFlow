@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load cache %}
 
 {% block title %}Главная - MailFlow{% endblock %}
 
@@ -16,58 +17,61 @@
 </div>
 
 {% if user.is_authenticated %}
-<h3 class="mb-4 text-secondary fw-semibold">Ваша личная статистика рассылок</h3>
+    {# Кэшируем блок статистики авторизованного пользователя #}
+    {% cache 500 user_stats_block user.id %}
+    <h3 class="mb-4 text-secondary fw-semibold">Ваша личная статистика рассылок</h3>
 
-<div class="row row-cols-1 row-cols-md-3 g-4 mb-4">
-    <div class="col">
-        <div class="card h-100 shadow-sm border-primary text-center">
-            <div class="card-body py-4">
-                <h6 class="card-subtitle mb-2 text-muted text-uppercase small fw-bold">Всего ваших рассылок</h6>
-                <p class="card-text display-4 fw-bold text-primary mb-0">{{ total_mailings }}</p>
+    <div class="row row-cols-1 row-cols-md-3 g-4 mb-4">
+        <div class="col">
+            <div class="card h-100 shadow-sm border-primary text-center">
+                <div class="card-body py-4">
+                    <h6 class="card-subtitle mb-2 text-muted text-uppercase small fw-bold">Всего ваших рассылок</h6>
+                    <p class="card-text display-4 fw-bold text-primary mb-0">{{ total_mailings }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col">
+            <div class="card h-100 shadow-sm border-info text-center">
+                <div class="card-body py-4">
+                    <h6 class="card-subtitle mb-2 text-muted text-uppercase small fw-bold">Активные кампании</h6>
+                    <p class="card-text display-4 fw-bold text-info mb-0">{{ active_mailings }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col">
+            <div class="card h-100 shadow-sm border-warning text-center">
+                <div class="card-body py-4">
+                    <h6 class="card-subtitle mb-2 text-muted text-uppercase small fw-bold">Охвачено уникальных клиентов</h6>
+                    <p class="card-text display-4 fw-bold text-warning mb-0">{{ unique_clients }}</p>
+                </div>
             </div>
         </div>
     </div>
-    <div class="col">
-        <div class="card h-100 shadow-sm border-info text-center">
-            <div class="card-body py-4">
-                <h6 class="card-subtitle mb-2 text-muted text-uppercase small fw-bold">Активные кампании</h6>
-                <p class="card-text display-4 fw-bold text-info mb-0">{{ active_mailings }}</p>
-            </div>
-        </div>
-    </div>
-    <div class="col">
-        <div class="card h-100 shadow-sm border-warning text-center">
-            <div class="card-body py-4">
-                <h6 class="card-subtitle mb-2 text-muted text-uppercase small fw-bold">Охвачено уникальных клиентов</h6>
-                <p class="card-text display-4 fw-bold text-warning mb-0">{{ unique_clients }}</p>
-            </div>
-        </div>
-    </div>
-</div>
 
-<!-- Статистика успешных и неуспешных попыток -->
-<h3 class="mb-4 text-secondary fw-semibold mt-5">Аналитика доставки сообщений</h3>
-<div class="row row-cols-1 row-cols-md-2 g-4 mb-5">
-    <div class="col">
-        <div class="card h-100 shadow-sm border-success text-center">
-            <div class="card-body py-4">
-                <h6 class="card-subtitle mb-2 text-muted text-uppercase small fw-bold text-success">Успешные отправки (Доставлено)</h6>
-                <p class="card-text display-4 fw-bold text-success mb-0">{{ success_logs }}</p>
+    <h3 class="mb-4 text-secondary fw-semibold mt-5">Аналитика доставки сообщений</h3>
+    <div class="row row-cols-1 row-cols-md-2 g-4 mb-5">
+        <div class="col">
+            <div class="card h-100 shadow-sm border-success text-center">
+                <div class="card-body py-4">
+                    <h6 class="card-subtitle mb-2 text-muted text-uppercase small fw-bold text-success">Успешные отправки (Доставлено)</h6>
+                    <p class="card-text display-4 fw-bold text-success mb-0">{{ success_logs }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col">
+            <div class="card h-100 shadow-sm border-danger text-center">
+                <div class="card-body py-4">
+                    <h6 class="card-subtitle mb-2 text-muted text-uppercase small fw-bold text-danger">Ошибки отправки (Не успешно)</h6>
+                    <p class="card-text display-4 fw-bold text-danger mb-0">{{ failure_logs }}</p>
+                </div>
             </div>
         </div>
     </div>
-    <div class="col">
-        <div class="card h-100 shadow-sm border-danger text-center">
-            <div class="card-body py-4">
-                <h6 class="card-subtitle mb-2 text-muted text-uppercase small fw-bold text-danger">Ошибки отправки (Не успешно)</h6>
-                <p class="card-text display-4 fw-bold text-danger mb-0">{{ failure_logs }}</p>
-            </div>
-        </div>
-    </div>
-</div>
+    {% endcache %} {# Закрываем кэш внутри блока авторизованного пользователя #}
 {% else %}
-<div class="alert alert-info text-center py-4" role="alert">
-    <h5>Войдите в систему, чтобы увидеть личную статистику и отчеты по рассылкам.</h5>
-</div>
+    <div class="alert alert-info text-center py-4" role="alert">
+        <h5>Войдите в систему, чтобы увидеть личную статистику и отчеты по рассылкам.</h5>
+    </div>
 {% endif %}
 {% endblock %}
+

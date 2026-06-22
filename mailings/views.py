@@ -1,5 +1,7 @@
 from django.core.exceptions import PermissionDenied
 from django.urls import reverse_lazy
+from django.utils.decorators import method_decorator
+from django.views.decorators.cache import cache_page
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 from .models import Mailing, MailingLog
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
@@ -68,6 +70,7 @@ class MailingSendView(View):
         return redirect('mailings:detail', pk=mailing.pk)
 
 
+@method_decorator(cache_page(60 * 10), name='dispatch')
 class HomeView(TemplateView):
     template_name = 'mailings/home.html'
 
