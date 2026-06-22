@@ -1,6 +1,6 @@
 from django.urls import reverse_lazy
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
-from .models import Mailing
+from .models import Mailing, MailingLog
 
 class MailingListView(ListView):
     model = Mailing
@@ -16,6 +16,11 @@ class MailingCreateView(CreateView):
     fields = ['message', 'clients', 'start_date', 'end_date', 'status']
     template_name = 'mailings/mailing_form.html'
     success_url = reverse_lazy('mailings:list')
+
+    def form_valid(self, form):
+        # Делаем текущего пользователя владельцем рассылки
+        form.instance.owner = self.request.user
+        return super().form_valid(form)
 
 class MailingUpdateView(UpdateView):
     model = Mailing
@@ -50,10 +55,27 @@ class HomeView(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        user = self.request.user
 
         # Сбор аналитики для главной страницы
-        context['total_mailings'] = Mailing.objects.count()
-        context['active_mailings'] = Mailing.objects.filter(status='started').count()
-        context['unique_clients'] = Client.objects.filter(mailings__isnull=False).distinct().count()
+        if user.is_authenticated:
+            # Статистика только для ТЕКУЩЕГО вошедшего пользователя
+            user_mailings = Mailing.objects.filter(owner=user)
+            context['total_mailings'] = user_mailings.count()
+            context['active_mailings'] = user_mailings.filter(status='started').count()
+
+            # Количество уникальных клиентов пользователя в рассылках
+            context['unique_clients'] = Client.objects.filter(mailings__owner=user).distinct().count()
+
+            # Сбор статистики попыток для этого пользователя
+            context['success_logs'] = MailingLog.objects.filter(mailing__owner=user, status='success').count()
+            context['failure_logs'] = MailingLog.objects.filter(mailing__owner=user, status='failure').count()
+        else:
+            # Для неавторизованных пользователей показываем нули или общую статистику
+            context['total_mailings'] = 0
+            context['active_mailings'] = 0
+            context['unique_clients'] = 0
+            context['success_logs'] = 0
+            context['failure_logs'] = 0
 
         return context

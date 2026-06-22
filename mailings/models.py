@@ -1,4 +1,5 @@
 from django.db import models
+from django.conf import settings
 from clients.models import Client
 from messages_app.models import Message
 
@@ -19,6 +20,10 @@ class Mailing(models.Model):
 
     # Связь «многие ко многим» с получателями
     clients = models.ManyToManyField(Client, verbose_name="Получатели", related_name="mailings")
+
+    # Привязка к создателю рассылки
+    owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, verbose_name="Владелец", blank=True,
+                              null=True)
 
     class Meta:
         verbose_name = "Рассылка"
